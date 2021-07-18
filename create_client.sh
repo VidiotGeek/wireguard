@@ -82,5 +82,10 @@ echo "Client Configuration"
 echo "######################################################"
 cat ${destination_file}.conf
 
+# make sure all secret files are only accessible to root
+chown -R root:root /etc/wireguard/
+chmod -R og-rwx /etc/wireguard/
+
+# restart services
 systemctl restart wg-quick@wg0
 systemctl restart wireguard-logging

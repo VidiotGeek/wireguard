@@ -16,17 +16,20 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+# secure all files we are about to create
+umask 077
+
 # prompt for client config params
-read -p "Enter Client Name:" client_name_temp
-read -p "Push All Routes ? If not only Intranet will be routed (y/n):" confirmRoutes
+read -p "Enter Client Name: " client_name_temp
+read -p "Push All Routes ? If not only Intranet will be routed (y/n): " confirmRoutes
 echo "What do you want the client IP to be,must be between ${IP_RANGE} ?:"
 echo "These Ips are already used:"
 grep AllowedIPs ${SERVER_CONFIG}
-read -p "Enter client IP you want to assign:" clientIP
+read -p "Enter client IP you want to assign: " clientIP
 
-if [ "${confirmRoutes}" == 'y' ];then
+if [ "${confirmRoutes}" == 'y' ]; then
         PUSH_ROUTE=${PUSH_ROUTE_ALL}
-elif [ "${confirmRoutes}" == 'n' ];then
+elif [ "${confirmRoutes}" == 'n' ]; then
         PUSH_ROUTE=${PUSH_ROUTE_INTRANET}
 else
         echo "Invalid Selection, aborting..."
@@ -83,8 +86,15 @@ echo "######################################################"
 cat ${destination_file}.conf
 
 # make sure all secret files are only accessible to root
-chown -R root:root /etc/wireguard/
-chmod -R og-rwx /etc/wireguard/
+echo ""
+echo "The files that we just created are only viewable by 'root'."
+echo "Access to /etc/wireguard/ and all files within should also be restricted to 'root'."
+echo ""
+read -p " Would you like to update permissions on /etc/wireguard?  (y/n): " restrictPermissions
+if [ "${restrictPermissions}" == 'y' ]; then
+    chown -R root:root /etc/wireguard/
+    chmod -R og-rwx /etc/wireguard/
+fi
 
 # restart services
 systemctl restart wg-quick@wg0

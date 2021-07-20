@@ -16,8 +16,15 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-# secure all files we are about to create
+# secure all files we are about to create & any that already exist
 umask 077
+echo "Access to /etc/wireguard/ and all files within should be restricted to 'root'."
+echo "The files we are about to create will be restricted to root."
+read -p " Would you like to update permissions on /etc/wireguard?  (y/n): " restrictPermissions
+if [ "${restrictPermissions}" == 'y' ]; then
+    chown -R root:root /etc/wireguard/
+    chmod -R og-rwx /etc/wireguard/
+fi
 
 # prompt for client config params
 read -p "Enter Client Name: " client_name_temp
@@ -84,17 +91,6 @@ qrencode -t ansiutf8 < ${destination_file}.conf
 echo "Client Configuration"
 echo "######################################################"
 cat ${destination_file}.conf
-
-# make sure all secret files are only accessible to root
-echo ""
-echo "The files that we just created are only viewable by 'root'."
-echo "Access to /etc/wireguard/ and all files within should also be restricted to 'root'."
-echo ""
-read -p " Would you like to update permissions on /etc/wireguard?  (y/n): " restrictPermissions
-if [ "${restrictPermissions}" == 'y' ]; then
-    chown -R root:root /etc/wireguard/
-    chmod -R og-rwx /etc/wireguard/
-fi
 
 # restart services
 systemctl restart wg-quick@wg0
